@@ -21,7 +21,7 @@
     
     // Should be called in sub-class for loading data for first page and init rowsPerPage
     [super loadDataWithRowsPerPage:ROWS_PER_PAGE success:^{
-        NSLog(@"First data loaded...");
+        NSLog(@"First data was loaded...");
     } failure:^(NSError *error) {
        
     }];
