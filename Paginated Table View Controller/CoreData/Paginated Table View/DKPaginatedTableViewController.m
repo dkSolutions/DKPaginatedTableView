@@ -37,7 +37,7 @@
         _rows = [[NSMutableArray alloc] init];
         _isLoading = NO;
         _shouldLoad = NO;
-        _currentPage = 0;
+        _currentPage = 1;
         _totalPages = 0;
     }
     return self;
@@ -124,21 +124,19 @@
     return _rows.count;
 }
 
-
-- (void) tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath{
+- (void) tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
+{
     
     if(indexPath.row == _rows.count - 1){
-        if((_isLoading == NO && _totalPages > _currentPage && _totalPages > 1) || (_totalPages == 0 && _isLoading == NO) )
+        if((_isLoading == NO && _totalPages >= _currentPage && _totalPages > 1) || (_totalPages == 0 && _isLoading == NO) )
         {
-            if(_totalRowsCount >0){
+            if(_totalRowsCount > 0){
                 _loadingLabel.text = [NSString stringWithFormat:@"Loading... %d / %d", _rows.count, _totalRowsCount];
             }
-            
+
             [self showLoadingView:YES];
             [self loadingData:^(NSUInteger totalRowsCount, NSArray *rows) {
                 
-                [self setTotalRowsCount:totalRowsCount];
-                [self setTotalPagesCountForTotalRowsCount:totalRowsCount rowsPerPage:_rowsPerPage];
                 _isLoading = NO;
                 [_rows addObjectsFromArray:rows];
                 ++_currentPage;
@@ -152,6 +150,7 @@
         }
     }
 }
+
 
 - (NSArray *)rows{
     return [_rows copy];
@@ -179,19 +178,27 @@
     }
 }
 
-- (void) loadDataWithRowsPerPage:(NSUInteger)rowsPerPage{
+// Should be called in sub-class for loading data for first page and init rowsPerPage
+- (void) loadDataWithRowsPerPage:(NSUInteger)rowsPerPage success:(void (^)())success failure:(void (^)(NSError *))failure{
     [self loadingData:^(NSUInteger totalRowsCount, NSArray *rows) {
         [self setRowsPerPage:rowsPerPage];
-        _currentPage = 1;
         [_rows addObjectsFromArray:rows];
+        [self setTotalRowsCount:totalRowsCount];
+        [self setTotalPagesCountForTotalRowsCount:totalRowsCount rowsPerPage:rowsPerPage];
+        
+        ++_currentPage;
         [self.tableView reloadData];
         _isLoading = NO;
+        success();
         
     } failure:^(NSError *error) {
         _isLoading = NO;
+        failure(error);
     }];
 }
 
+//Should be overridden in sub-class
+//And should be called in sub-class
 - (void) loadingData:(void (^)(NSUInteger totalRowsCount, NSArray *rows))success failure:(void (^)(NSError *error))failure{
     _isLoading = YES;
 }

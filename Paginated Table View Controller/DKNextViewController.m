@@ -5,7 +5,7 @@
 
 //Fake data
 #define ROWS_PER_PAGE 20
-#define TOTAL_PAGES 43
+#define TOTAL_ROWS 43
 
 #import "DKNextViewController.h"
 
@@ -18,7 +18,13 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    [super loadDataWithRowsPerPage:ROWS_PER_PAGE];
+    
+    // Should be called in sub-class for loading data for first page and init rowsPerPage
+    [super loadDataWithRowsPerPage:ROWS_PER_PAGE success:^{
+        NSLog(@"First data loaded...");
+    } failure:^(NSError *error) {
+       
+    }];
 }
 
 - (void)didReceiveMemoryWarning
@@ -38,8 +44,7 @@
     if(indexPath.row < self.rows.count){
         cell.textLabel.text = [self.rows objectAtIndex:indexPath.row];
     }
-    
-    
+
     return cell;
 }
 
@@ -52,9 +57,8 @@
 //Fake Data for paging
 - (void) wait:(void (^)(NSUInteger totalRowsCount, NSArray *rows))success{
     
-
     NSMutableArray *dataArray = [[NSMutableArray alloc] init];
-    int dataChunk = TOTAL_PAGES - [self currentPage] * ROWS_PER_PAGE;
+    int dataChunk = TOTAL_ROWS - ([self currentPage] - 1) * ROWS_PER_PAGE;
     if(dataChunk > ROWS_PER_PAGE){
         dataChunk = ROWS_PER_PAGE;
     }
@@ -65,7 +69,7 @@
             long int x = arc4random() % t;
             [dataArray addObject:[NSString stringWithFormat:@"%ld", x]];
         }
-        success(TOTAL_PAGES, [dataArray copy]);
+        success(TOTAL_ROWS, [dataArray copy]);
     }
 }
 
